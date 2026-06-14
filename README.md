@@ -99,7 +99,16 @@ connect — no need to memorise the tool names.
 
 ### Option 2 — no host, pure terminal
 
-Save this as `audit.mjs` in the project root and run `node audit.mjs`.
+First, get the project and build it:
+
+```bash
+git clone https://github.com/alitiknazoglu/mcprobe
+cd mcprobe
+npm install
+npm run build
+```
+
+Then save this as `audit.mjs` in the project root and run `node audit.mjs`.
 Swap the `url` (or use `transport: "stdio", command, args`) for any
 target:
 
