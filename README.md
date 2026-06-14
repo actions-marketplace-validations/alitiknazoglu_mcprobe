@@ -296,9 +296,10 @@ host, and an MCP *client* to whatever it is auditing. The split
 mirrors the source layout.
 
 ```
-      +--------------------------------------+
-      |  host  (Claude Code, IDE, an agent)  |
-      +--------------------------------------+
++-------------------------------------------------+
+| any MCP client over stdio:                      |
+| Claude Code, an IDE, an agent, or a node script |
++-------------------------------------------------+
                           |
                           |  stdio JSON-RPC  (stdin / stdout)
                           v
@@ -323,9 +324,12 @@ mirrors the source layout.
               +---------------------+
 ```
 
-The host talks only to MCProbe (stdio); MCProbe's `src/target-client`
-then dials the audited server over stdio or http. The probe sits in the
-middle — a server to its host, a client to its target.
+The top box is whatever drives MCProbe over stdio — a full host like
+Claude Code, **or a plain `node` script** (the `scripts/*.mjs` drivers
+and the Quickstart's `audit.mjs` are exactly this; no host required).
+It talks only to MCProbe; MCProbe's `src/target-client` then dials the
+audited server over stdio or http. The probe sits in the middle — a
+server to its caller, a client to its target.
 
 | Module | Role | I/O? |
 | --- | --- | --- |
