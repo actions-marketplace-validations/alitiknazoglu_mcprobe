@@ -275,6 +275,13 @@ header also shows two extra lines:
   behavioral issues` when there are none. The normalized scores are
   unchanged; this just makes the scary stuff visible above the fold.
 
+The report ends with a **Recommended fixes** section: a prioritized to-do
+list (worst severity first) that turns each finding into a concrete action
+— the fix hint plus the exact tools/parameters it affects — followed by
+behavioral fixes for tools that silently accept input or crash. So the
+report is a *prescription*, not just a diagnosis. A clean server gets
+"Nothing to fix — this server passes every check."
+
 ## 30-second demo
 
 The probe ships with a deliberately flawed demo target at

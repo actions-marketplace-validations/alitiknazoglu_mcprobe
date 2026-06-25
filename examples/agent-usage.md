@@ -73,6 +73,14 @@ result (the `markdown` field of the structured `ConformanceReport`):
 | --- | --- | --- | --- | --- | --- |
 | `divide` | wrong_type:a | ok | yes | 1 | |
 ...
+
+## Recommended fixes
+Address these to raise the score, worst first:
+
+- **error** Add a one- or two-sentence description so language models can decide when to call it. _(`tool.missing_description`: greet)_
+- **warning** Add a 'type' so agents know what values to pass. _(`param.untyped`: greet.name, divide.a, divide.b)_
+- **info** Add MCP annotations so agents can reason about side effects. _(`tool.no_annotations`: greet, divide, set_mode)_
+- **behavioral** Validate inputs and reject unknown keys so malformed arguments return a clear error instead of being silently accepted _(greet, divide, set_mode)_
 ```
 
 ### 3. The agent closes the connection

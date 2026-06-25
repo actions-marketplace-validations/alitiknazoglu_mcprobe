@@ -35,7 +35,80 @@ export function renderReport(report: ConformanceReport): string {
   parts.push(renderDimensions(report));
   parts.push(renderFindingsSummary(report.findings));
   parts.push(renderFuzzTable(report.fuzz));
+  parts.push(renderRecommendedFixes(report));
   return parts.join("\n\n") + "\n";
+}
+
+/** A prioritized to-do list. Turns the findings (and behavioral problems)
+ *  into concrete fixes: each lint code is shown once with its hint and the
+ *  locations it affects, worst severity first, followed by behavioral fixes
+ *  for silent accepts and crashes. This is what makes the report a
+ *  prescription, not just a diagnosis. */
+function renderRecommendedFixes(report: ConformanceReport): string {
+  const lines: string[] = ["## Recommended fixes", ""];
+  const items: string[] = [];
+
+  // Group lint findings by code so each fix is suggested once, with the
+  // locations it affects. Order by worst severity first, then code.
+  const severityRank: Record<string, number> = { error: 0, warning: 1, info: 2 };
+  const byCode = new Map<
+    string,
+    { severity: string; hint: string; where: string[] }
+  >();
+  for (const f of report.findings) {
+    const entry =
+      byCode.get(f.code) ?? { severity: f.severity, hint: f.hint, where: [] };
+    const loc = f.location.param
+      ? `${f.location.tool ?? "?"}.${f.location.param}`
+      : f.location.tool ?? "server";
+    entry.where.push(loc);
+    byCode.set(f.code, entry);
+  }
+  const sorted = [...byCode.entries()].sort(
+    (a, b) =>
+      (severityRank[a[1].severity] ?? 9) - (severityRank[b[1].severity] ?? 9) ||
+      a[0].localeCompare(b[0])
+  );
+  for (const [code, e] of sorted) {
+    items.push(`- **${e.severity}** ${e.hint} _(\`${code}\`: ${affected(e.where)})_`);
+  }
+
+  // Behavioral fixes — only when fuzz ran and there are issues.
+  if (report.fuzz.length > 0) {
+    const silentTools = [
+      ...new Set(report.fuzz.filter((r) => r.silentlyAccepted).map((r) => r.name)),
+    ];
+    const crashTools = [
+      ...new Set(
+        report.fuzz.filter((r) => r.outcome === "protocolCrash").map((r) => r.name)
+      ),
+    ];
+    if (silentTools.length > 0) {
+      items.push(
+        `- **behavioral** Validate inputs and reject unknown keys (e.g. a strict schema) so malformed arguments return a clear error instead of being silently accepted _(${affected(silentTools)})_`
+      );
+    }
+    if (crashTools.length > 0) {
+      items.push(
+        `- **behavioral** Guard against bad input before it throws, so the call returns a tool error instead of crashing the connection _(${affected(crashTools)})_`
+      );
+    }
+  }
+
+  if (items.length === 0) {
+    lines.push("Nothing to fix — this server passes every check. ✓");
+  } else {
+    lines.push("Address these to raise the score, worst first:");
+    lines.push("");
+    lines.push(...items);
+  }
+  return lines.join("\n");
+}
+
+/** Format an affected-locations list, truncating long ones. */
+function affected(where: string[]): string {
+  if (where.length <= 5) return where.join(", ");
+  return `${where.slice(0, 5).join(", ")} +${where.length - 5} more`;
 }
 
 // ---------------------------------------------------------------------------

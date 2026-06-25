@@ -6,7 +6,7 @@ This transcript is the AC-8 **self-audit**: a second copy of `dist/index.js` was
 **Host probe:** first copy of `./dist/index.js`
 **Target handshake:** `mcprobe` 0.1.0 (tools=6, resources=0, prompts=0)
 **Target capabilities:** tools
-**Audit timestamp (UTC):** 2026-06-25T18:00:37.629Z
+**Audit timestamp (UTC):** 2026-06-25T18:18:14.891Z
 **Static rollup (gating):** 94/100, grade **A**
 **Behavioral rollup (informational):** 76/100, grade **B**
 
@@ -46,6 +46,12 @@ This transcript is the AC-8 **self-audit**: a second copy of `dist/index.js` was
 ## Fuzz table
 
 No fuzz cases ran. Pass `fuzz: true` to evaluate Error Handling and Liveness.
+
+## Recommended fixes
+
+Address these to raise the score, worst first:
+
+- **info** Add a top-level 'required' array listing the mandatory parameters so agents know which ones to populate. _(`schema.no_required`: probe_lint, probe_fuzz, probe_report, probe_list, probe_disconnect)_
 
 ---
 
@@ -103,10 +109,10 @@ The canonical self-audit score above uses the spec's measured-only rollup (stati
 | Tool | Case | Outcome | Silent | Latency (ms) | Notes |
 | --- | --- | --- | --- | --- | --- |
 | `probe_connect` | `valid` | toolError | no | 2 | MCP error -32602: Input validation error: Invalid arguments… |
-| `probe_connect` | `missing_required:transport` | toolError | no | 1 | MCP error -32602: Input validation error: Invalid arguments… |
-| `probe_connect` | `wrong_type:transport` | toolError | no | 0 | MCP error -32602: Input validation error: Invalid arguments… |
+| `probe_connect` | `missing_required:transport` | toolError | no | 0 | MCP error -32602: Input validation error: Invalid arguments… |
+| `probe_connect` | `wrong_type:transport` | toolError | no | 1 | MCP error -32602: Input validation error: Invalid arguments… |
 | `probe_connect` | `wrong_type:command` | toolError | no | 0 | MCP error -32602: Input validation error: Invalid arguments… |
-| `probe_connect` | `wrong_type:args` | toolError | no | 0 | MCP error -32602: Input validation error: Invalid arguments… |
+| `probe_connect` | `wrong_type:args` | toolError | no | 1 | MCP error -32602: Input validation error: Invalid arguments… |
 | `probe_connect` | `wrong_type:env` | toolError | no | 0 | MCP error -32602: Input validation error: Invalid arguments… |
 | `probe_connect` | `wrong_type:url` | toolError | no | 0 | MCP error -32602: Input validation error: Invalid arguments… |
 | `probe_connect` | `out_of_enum:transport` | toolError | no | 0 | MCP error -32602: Input validation error: Invalid arguments… |
@@ -127,7 +133,14 @@ The canonical self-audit score above uses the spec's measured-only rollup (stati
 | `probe_disconnect` | `wrong_type:id` | toolError | no | 0 | MCP error -32602: Input validation error: Invalid arguments… |
 | `probe_disconnect` | `extra_garbage` | ok | yes | 0 |  |
 
+## Recommended fixes
+
+Address these to raise the score, worst first:
+
+- **info** Add a top-level 'required' array listing the mandatory parameters so agents know which ones to populate. _(`schema.no_required`: probe_lint, probe_fuzz, probe_report, probe_list, probe_disconnect)_
+- **behavioral** Validate inputs and reject unknown keys (e.g. a strict schema) so malformed arguments return a clear error instead of being silently accepted _(probe_disconnect)_
+
 ---
 
 *Self-audit script: `scripts/self-audit.mjs`*
-*Audit timestamp (UTC): 2026-06-25T18:00:37.629Z*
+*Audit timestamp (UTC): 2026-06-25T18:18:14.891Z*

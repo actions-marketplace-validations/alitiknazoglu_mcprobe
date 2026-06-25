@@ -288,6 +288,16 @@ try {
     );
   }
 
+  // (4f) Recommended fixes section — a prioritized to-do list. The demo
+  //      has findings and silent accepts, so it must carry fix bullets.
+  if (!/^##\s+Recommended fixes/m.test(md)) {
+    fail(`markdown missing '## Recommended fixes' section. Last 500 chars:\n${md.slice(-500)}`);
+  }
+  const fixesSection = md.split(/^##\s+Recommended fixes/m)[1] ?? "";
+  if (!/-\s+\*\*(error|warning|info|behavioral)\*\*/.test(fixesSection)) {
+    fail(`Recommended fixes section has no fix bullets: ${fixesSection.slice(0, 400)}`);
+  }
+
   // (5) Sanity: the report payload must contain the same number of
   //     findings and fuzz rows as the smoke-fuzz and smoke-lint
   //     scripts would produce (≥1 finding, ≥1 fuzz result).

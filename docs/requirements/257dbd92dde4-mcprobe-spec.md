@@ -135,6 +135,8 @@ Four dimensions, each scored out of 10, rolled into an overall 0–100. The two 
 
 **Report header (when fuzz ran):** in addition to the score and grade, the header carries a **Coverage** line (tools fuzzed vs skipped) and a **critical-issues callout** — a flag, not a second score, summarizing silent-accepting tools and protocol crashes so the dangerous findings sit above the fold (`⚠ Critical: …`, or `✓ No critical behavioral issues`).
 
+**Recommended fixes:** the report ends with a prioritized to-do list. Each lint finding is grouped by code into a single fix (its hint plus the affected tools/parameters, worst severity first), followed by behavioral fixes for silent accepts and crashes — turning the report into a prescription, not just a diagnosis. A clean server gets "Nothing to fix."
+
 Grades: **A** ≥90, **B** ≥75, **C** ≥60, **D** ≥40, **F** <40.
 
 ---

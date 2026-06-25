@@ -20,6 +20,9 @@ import type {
   FuzzOutcome,
   DimensionScore,
   FuzzCoverage,
+  Finding,
+  FindingCode,
+  Severity,
 } from "../src/types.js";
 
 /** Build a FuzzResult row. `c` is the case label ("valid" or a malformed one). */
@@ -241,5 +244,57 @@ describe("renderReport critical-issues callout", () => {
       })
     );
     expect(md).not.toMatch(/Critical/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// renderReport — Recommended fixes (the to-do list after the fuzz table)
+// ---------------------------------------------------------------------------
+
+function finding(
+  code: FindingCode,
+  severity: Severity,
+  hint: string,
+  tool = "t",
+  param?: string
+): Finding {
+  return {
+    code,
+    severity,
+    message: "problem",
+    location: param ? { tool, param } : { tool },
+    hint,
+  };
+}
+
+describe("renderReport recommended fixes", () => {
+  it("lists one fix per finding code, worst severity first", () => {
+    const md = renderReport(
+      buildReport(
+        { name: "s", version: "1.0.0" },
+        { tools: {} },
+        [
+          finding("param.untyped", "warning", "add a type", "t", "x"),
+          finding("tool.missing_description", "error", "add a description"),
+        ],
+        [],
+        { fuzzMeasured: false }
+      )
+    );
+    expect(md).toMatch(/## Recommended fixes/);
+    expect(md).toMatch(/add a description/);
+    // The error fix appears before the warning fix.
+    expect(md.indexOf("add a description")).toBeLessThan(md.indexOf("add a type"));
+  });
+
+  it("adds a behavioral fix when tools silently accept input", () => {
+    const md = renderReport(reportWithFuzz([malformedSilent("badTool"), validOk()]));
+    expect(md).toMatch(/\*\*behavioral\*\* Validate inputs/);
+    expect(md).toMatch(/badTool/);
+  });
+
+  it("says nothing to fix for a clean server", () => {
+    const md = renderReport(reportWithFuzz([malformedGraceful(), validOk()]));
+    expect(md).toMatch(/Nothing to fix/);
   });
 });

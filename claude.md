@@ -218,7 +218,12 @@ lint, transport, stdio, capability, severity, finding.
   rendered as the header **Coverage** line. The header also carries a
   **critical-issues callout** (`renderCriticalLine` in src/report.ts) —
   a flag listing silent-accepting tools + crash count, *not* a second
-  score; the normalized scores are untouched.
+  score; the normalized scores are untouched. The report then ends with a
+  **Recommended fixes** section (`renderRecommendedFixes`): the lint
+  findings grouped by code into one fix each (the finding's `hint` +
+  affected locations, worst severity first), plus behavioral fixes for
+  silent accepts and crashes. When a lint rule's `hint` changes, the
+  recommended-fixes output changes with it — no extra wiring needed.
 - **Normalized, non-overlapping scoring** (src/conformance.ts). The two
   behavioral dimensions are rate-based so scores compare across server
   sizes, and they **partition the fuzz cases by kind** — malformed cases
