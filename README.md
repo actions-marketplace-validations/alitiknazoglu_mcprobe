@@ -158,6 +158,14 @@ All tools default to the most recently opened connection when
 `connectionId` is omitted, so a single-target audit is a three-call
 sequence: `probe_connect` → `probe_report` → `probe_disconnect`.
 
+Every tool also declares MCP **annotations** so a host can reason about
+side effects before calling: `probe_lint` and `probe_list` are
+`readOnlyHint: true`, while `probe_fuzz` is `destructiveHint: true`
+(it invokes the target's tools), and the tools that reach a target
+(`probe_connect`, `probe_fuzz`, `probe_report`) set `openWorldHint: true`.
+MCProbe audits other servers for agent-usability, so it declares these
+hints on its own tools too.
+
 ### `probe_connect`
 
 Two transports: `stdio` (spawns a child process) and `http` (speaks

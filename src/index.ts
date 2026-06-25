@@ -136,6 +136,8 @@ server.tool(
         "http: URL of the target MCP server. Required when transport='http'."
       ),
   },
+  // Opens a connection to — and talks to — an external MCP server.
+  { readOnlyHint: false, openWorldHint: true },
   async (args) => {
     const tool = "probe_connect";
     try {
@@ -192,6 +194,8 @@ server.tool(
         "Identifier returned by probe_connect. Defaults to the most recent connection if omitted."
       ),
   },
+  // Pure read over cached tool summaries — no calls to the target.
+  { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   async (args) => {
     const tool = "probe_lint";
     try {
@@ -234,6 +238,8 @@ server.tool(
       .optional()
       .describe("Cap on the number of tools to fuzz. Defaults to 10."),
   },
+  // Invokes the target's tools with malformed inputs — has side effects.
+  { readOnlyHint: false, destructiveHint: true, openWorldHint: true },
   async (args) => {
     const tool = "probe_fuzz";
     try {
@@ -280,6 +286,8 @@ server.tool(
       .optional()
       .describe("Forwarded to probe_fuzz when fuzz=true. Defaults to 10."),
   },
+  // Lints always; also fuzzes the target's tools when fuzz=true.
+  { readOnlyHint: false, openWorldHint: true },
   async (args) => {
     const tool = "probe_report";
     try {
@@ -335,6 +343,8 @@ server.tool(
       .optional()
       .describe("Identifier returned by probe_connect. Defaults to the most recent connection."),
   },
+  // Enumerates cached tool summaries — no calls to the target.
+  { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   async (args) => {
     const tool = "probe_list";
     try {
@@ -365,6 +375,8 @@ server.tool(
       .optional()
       .describe("Connection id returned by probe_connect. Omit to close every connection."),
   },
+  // Closes a local connection; closing an already-closed id is a no-op.
+  { readOnlyHint: false, idempotentHint: true, openWorldHint: false },
   async (args) => {
     const tool = "probe_disconnect";
     try {

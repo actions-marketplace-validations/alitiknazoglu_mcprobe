@@ -144,8 +144,13 @@ lint, transport, stdio, capability, severity, finding.
 1. Open `src/index.ts` and locate the tool-registration block
    (`server.tool(...)` calls).
 2. Append the new registration using the same `server.tool(name,
-   description, inputSchema, handler)` shape. The first argument must
-   be `snake_case` and start with `probe_`.
+   description, inputSchema, annotations, handler)` shape. The first
+   argument must be `snake_case` and start with `probe_`. Declare the
+   tool's behavioral hints in `annotations` (`readOnlyHint`,
+   `destructiveHint`, `idempotentHint`, `openWorldHint`) — a tool that
+   reaches a target sets `openWorldHint: true`; a pure/cached read sets
+   `readOnlyHint: true`; a tool that invokes the target's tools sets
+   `destructiveHint: true`.
 3. The handler must return a `CallToolResult` (use the local `ok()` /
    `fail()` helpers) and must never throw out — wrap every body in
    `try { ... } catch (err) { return fail(tool, err); }`.
