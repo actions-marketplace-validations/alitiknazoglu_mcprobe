@@ -3,13 +3,18 @@
 // behavioral fuzz results, produce a per-dimension scorecard and a
 // letter grade.
 //
-// The model is subtractive: every dimension starts at full marks
-// (10.0) and loses points only for concrete, observed problems.
-// The overall 0–100 score is the mean of *measured* dimensions —
-// when fuzz did not run, the two behavioral dimensions are reported
-// as "not measured" and excluded from the average rather than
-// penalized with a fake value. This is what lets a static audit
-// (lint only) of a clean server still score 100/100.
+// The two static dimensions (Metadata, Schema Quality) are subtractive:
+// they start at full marks (10.0) and lose points per concrete finding.
+// The two behavioral dimensions (Error Handling, Liveness) are normalized
+// rates so scores are comparable across servers of different sizes, and
+// they partition the fuzz cases by kind — malformed cases score Error
+// Handling, valid cases score Liveness — so no outcome is double-counted.
+//
+// The overall 0–100 score is the mean of *measured* dimensions — when
+// fuzz did not run (or every tool was skipped), the two behavioral
+// dimensions are reported as "not measured" and excluded from the average
+// rather than penalized with a fake value. This is what lets a static
+// audit (lint only) of a clean server still score 100/100.
 //
 // Grades: A >=90, B >=75, C >=60, D >=40, F <40.
 

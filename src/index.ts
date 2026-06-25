@@ -217,12 +217,14 @@ server.tool(
 );
 
 // probe_fuzz — behavioral audit, actually calls the target's tools.
-// Substantive body: AC-5. For each tool (capped at maxTools) it
-// generates one valid and several malformed cases, invokes the target
+// Substantive body: AC-5. For each eligible tool (destructive tools are
+// skipped unless fuzzDestructive is set; the rest are capped at maxTools)
+// it generates one valid and several malformed cases, invokes the target
 // over the live protocol, and classifies each outcome as ok /
 // toolError / protocolCrash. A malformed case that comes back without
 // isError is recorded as silentlyAccepted — the "tool shrugged" case
-// the fuzzer exists to surface.
+// the fuzzer exists to surface. The response also carries a coverage
+// summary of which tools were fuzzed vs skipped.
 server.tool(
   "probe_fuzz",
   "Generate one valid and several malformed inputs per target tool, call each, and record the outcome (ok, toolError, protocolCrash), whether malformed inputs were silently accepted, and call latency. Tools annotated destructiveHint:true are skipped by default (set fuzzDestructive to include them). Returns a coverage summary of which tools were fuzzed vs skipped.",

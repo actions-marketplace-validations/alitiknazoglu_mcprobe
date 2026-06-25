@@ -292,9 +292,10 @@ connection to the demo target, calls `probe_report` with
 `fuzz: true`, and prints the Markdown report to stdout. The demo
 target is wired to fail loudly: `greet` has no description,
 `divide` returns `NaN` on bad input, `set_mode` has a thin
-description, and `well_behaved` is the only clean tool. The report
-will show a low overall score with concrete findings and a fuzz
-table that classifies the broken cases.
+description, and `well_behaved` is the only tool with a clean,
+validated schema. The report will show a low overall score with
+concrete findings, a coverage line, a critical-issues callout, and a
+fuzz table that classifies the broken cases.
 
 For an interactive tour, the official MCP inspector works as a
 host against the built probe:
