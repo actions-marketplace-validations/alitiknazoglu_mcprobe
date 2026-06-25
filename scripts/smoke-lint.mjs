@@ -6,7 +6,7 @@
 //   2. probe_lint returns at least one param.untyped finding
 //   3. Every finding has the five required fields:
 //      code, severity, message, location, hint
-//   4. The 11-rule code set is a subset of the response (i.e. all
+//   4. The 12-rule code set is a subset of the response (i.e. all
 //      codes the spec requires are present in the FindingCode union
 //      and a representative subset is exercised by the demo).
 //   5. The demo's well_behaved tool (correctly-typed) generates no
@@ -28,6 +28,7 @@ const REQUIRED_CODES = [
   "schema.no_required",
   "param.untyped",
   "param.missing_description",
+  "tool.no_annotations",
   "server.no_tools",
 ];
 
@@ -154,12 +155,12 @@ try {
     );
   }
 
-  // (6) Every code in the response must belong to the 11-rule set.
+  // (6) Every code in the response must belong to the 12-rule set.
   //     This is a guard against typos in the code strings.
   for (const f of findings) {
     if (!REQUIRED_CODES.includes(f.code)) {
       fail(
-        `finding has unknown code '${f.code}' (not in the 11-rule set)`
+        `finding has unknown code '${f.code}' (not in the 12-rule set)`
       );
     }
   }

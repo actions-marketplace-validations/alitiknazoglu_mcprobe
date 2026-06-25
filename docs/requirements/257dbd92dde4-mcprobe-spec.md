@@ -114,6 +114,7 @@ Each produces a finding with a stable code:
 - `schema.no_required` (info) — has params but none marked required.
 - `param.untyped` (warning) — parameter has no `type`/`enum`/`oneOf`.
 - `param.missing_description` (warning) — parameter has no description.
+- `tool.no_annotations` (info) — tool declares no MCP annotations (`readOnlyHint`, `destructiveHint`, etc.).
 - `server.no_tools` (warning) — advertises tools capability but exposes none.
 
 ---
