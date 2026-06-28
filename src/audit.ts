@@ -6,7 +6,7 @@
 // child process for an untrusted user. Keep this module side-effect-free on
 // import (no server boot) so it's safe to import from any backend.
 
-import { connectHttp } from "./target-client.js";
+import { connectHttp, connectStdio, type Connection } from "./target-client.js";
 import { lintTools } from "./schema-lint.js";
 import { runFuzz } from "./fuzz.js";
 import { buildReport } from "./conformance.js";
@@ -31,16 +31,22 @@ export interface AuditUrlOptions {
   maxTools?: number;
 }
 
-/**
- * Audit an MCP server reachable over HTTP and return the full conformance
- * report. Opens a connection, lints the tool schemas, optionally fuzzes, then
- * scores — and always closes the connection.
- */
-export async function auditUrl(
-  url: string,
-  opts: AuditUrlOptions = {}
+/** Options for auditing a local stdio MCP server (a subprocess). */
+export interface AuditStdioOptions extends AuditUrlOptions {
+  /** Arguments passed to the command (e.g. ["my-server"] for `npx`). */
+  args?: string[];
+  /** Extra environment variables for the spawned process. */
+  env?: Record<string, string>;
+  /** Working directory for the spawned process. */
+  cwd?: string;
+}
+
+/** Lint + (optionally) fuzz + score an already-open connection. Shared by the
+ *  HTTP and stdio entry points so both transports score identically. */
+async function auditConnection(
+  conn: Connection,
+  opts: AuditUrlOptions
 ): Promise<ConformanceReport> {
-  const conn = await connectHttp({ url });
   try {
     const toolsCapability = Boolean(
       (conn.capabilities as { tools?: unknown }).tools
@@ -76,6 +82,39 @@ export async function auditUrl(
       // best-effort: the transport may already be gone
     }
   }
+}
+
+/**
+ * Audit an MCP server reachable over HTTP and return the full conformance
+ * report. Opens a connection, lints the tool schemas, optionally fuzzes, then
+ * scores — and always closes the connection.
+ */
+export async function auditUrl(
+  url: string,
+  opts: AuditUrlOptions = {}
+): Promise<ConformanceReport> {
+  const conn = await connectHttp({ url });
+  return auditConnection(conn, opts);
+}
+
+/**
+ * Audit a local stdio MCP server — a subprocess launched with `command` (plus
+ * `args`). Same scoring as auditUrl; only the transport differs. Use this for
+ * servers that have no URL (the `npx some-server` / Claude Desktop style).
+ *
+ * Spawns a child process locally, so only call it with a command you trust.
+ */
+export async function auditStdio(
+  command: string,
+  opts: AuditStdioOptions = {}
+): Promise<ConformanceReport> {
+  const conn = await connectStdio({
+    command,
+    args: opts.args,
+    env: opts.env,
+    cwd: opts.cwd,
+  });
+  return auditConnection(conn, opts);
 }
 
 /**

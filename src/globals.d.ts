@@ -14,8 +14,11 @@ declare namespace NodeJS {
   }
   interface Process {
     env: ProcessEnv;
+    argv: string[];
     exit(code?: number): never;
     cwd(): string;
+    stdout: { write(s: string): boolean };
+    stderr: { write(s: string): boolean };
     hrtime: {
       bigint(): bigint;
     };
@@ -39,6 +42,23 @@ declare var URL: { new (url: string): URL };
 interface ImportMeta {
   url: string;
 }
+
+// Minimal global fetch (Node >=18) — used only by the CLI's `push` upload.
+interface Response {
+  ok: boolean;
+  status: number;
+  statusText: string;
+  json(): Promise<unknown>;
+  text(): Promise<string>;
+}
+declare function fetch(
+  input: string,
+  init?: {
+    method?: string;
+    headers?: Record<string, string>;
+    body?: string;
+  }
+): Promise<Response>;
 
 declare module "node:fs" {
   export function existsSync(path: string): boolean;

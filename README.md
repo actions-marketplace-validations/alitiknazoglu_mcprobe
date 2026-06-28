@@ -99,49 +99,40 @@ The host calls `probe_connect` then `probe_report` for you. MCProbe also
 advertises server `instructions`, so the model is told the flow on
 connect — no need to memorise the tool names.
 
-### Option 2 — no host, pure terminal
+### Option 2 — the `mcprobe` CLI (no host)
 
-First, get the project and build it:
+Get the project and build it, then audit any server straight from the
+terminal:
 
 ```bash
 git clone https://github.com/alitiknazoglu/mcprobe
-cd mcprobe
-npm install
-npm run build
+cd mcprobe && npm install && npm run build
+
+# audit an HTTP server
+node dist/index.js audit https://docs.base.org/mcp --fuzz
+
+# audit a LOCAL stdio server (no URL — the `npx some-server` style)
+node dist/index.js audit --stdio "npx @acme/my-mcp-server" --fuzz
 ```
 
-**Step 1 — create the script.** Paste this whole block into your
-terminal (still inside the `mcprobe` folder). It writes the file for you
-— don't paste the JavaScript directly into the shell, or it will error:
+(After `npm install -g .` or `npm link`, the command is just `mcprobe audit …`.)
+
+It prints the full Markdown report to stdout. `--fuzz` also **calls each tool
+with malformed input** to score Error Handling & Liveness; tools the target
+marks `destructiveHint: true` are skipped unless you add `--fuzz-destructive`,
+so a default run is safe even against servers you don't control. Omit `--fuzz`
+for a read-only static audit (metadata + schema quality only).
+
+**Save an audit to your account.** `push` runs the same audit and uploads the
+report to an ingest endpoint (default `https://mcprobe.org/api/ingest`) with a
+bearer token:
 
 ```bash
-cat > audit.mjs <<'EOF'
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-const client = new Client({ name: "runner", version: "1.0.0" }, { capabilities: {} });
-await client.connect(new StdioClientTransport({ command: "node", args: ["dist/index.js"] }));
-const call = async (n, a) => (await client.callTool({ name: n, arguments: a })).content.map(c => c.text).join("\n");
-console.log(await call("probe_connect", { transport: "http", url: "https://docs.base.org/mcp" }));
-console.log(await call("probe_report", { fuzz: true }));
-await client.close(); process.exit(0);
-EOF
+node dist/index.js push --stdio "npx @acme/my-mcp-server" --fuzz --token mcp_xxx
 ```
 
-**Step 2 — run it:**
-
-```bash
-node audit.mjs
-```
-
-Swap the `url` (or use `transport: "stdio", command, args`) to audit any
-other target.
-
-`fuzz: false` runs a read-only static audit (metadata + schema quality
-only). `fuzz: true` also **calls the target's tools with malformed
-inputs** to score error handling and liveness. Tools the target marks
-`destructiveHint: true` are skipped by default (pass `fuzzDestructive:
-true` to include them), so a default fuzz run is safe even against
-servers you don't control.
+The token comes from your mcprobe.org profile; `--to <url>` (or `MCPROBE_API`)
+points it at a different endpoint. Run `mcprobe help` for all flags.
 
 ## The six `probe_*` tools
 
@@ -348,24 +339,30 @@ probe scoring the first) lives at
 
 ## Use as a library
 
-Besides the MCP server, MCProbe exposes its audit pipeline as a function for
-embedding in your own backend. It audits **HTTP** MCP servers (URL in, report
-out) and never spawns a process:
+Besides the MCP server, MCProbe exposes its audit pipeline as functions for
+embedding in your own backend:
 
 ```ts
-import { auditUrl, softenReport, renderReport } from "mcprobe/audit";
+import { auditUrl, auditStdio, softenReport, renderReport } from "mcprobe/audit";
 
+// HTTP server (URL in, report out — never spawns a process):
 const report = await auditUrl("https://example.com/mcp", { fuzz: false });
+
+// Local stdio server (spawns the subprocess — only run commands you trust):
+const local = await auditStdio("npx", { args: ["@acme/my-mcp-server"], fuzz: true });
+
 console.log(report.overall, report.grade);  // structured ConformanceReport
 console.log(renderReport(report));          // or the Markdown
 const teaser = softenReport(report);        // a trimmed view (scores, no detail)
 ```
 
-`auditUrl` defaults to a static, read-only audit (`fuzz: false`); pass
-`fuzz: true` to also run the behavioral fuzzer (destructive tools are skipped
-unless `fuzzDestructive: true`). `softenReport` is handy for a free/preview
-tier — it keeps the scores and counts but withholds the reasons, full
-findings, fuzz table, and recommended fixes.
+Both default to a static, read-only audit (`fuzz: false`); pass `fuzz: true` to
+also run the behavioral fuzzer (destructive tools are skipped unless
+`fuzzDestructive: true`). `auditUrl` is HTTP-only and side-effect-free, ideal
+for a hosted backend; `auditStdio` launches a local subprocess, so use it only
+for servers you trust (CLIs, your own machine). `softenReport` is handy for a
+free/preview tier — it keeps the scores and counts but withholds the reasons,
+full findings, fuzz table, and recommended fixes.
 
 ## Architecture
 

@@ -423,7 +423,23 @@ async function main(): Promise<void> {
   console.error("[mcprobe] stdio server ready");
 }
 
-main().catch((err) => {
-  console.error("[mcprobe] fatal:", err);
-  process.exit(1);
-});
+// Dispatch: a recognized first argument runs the CLI (audit / push / help);
+// no arguments (or `serve`) boots the MCP server — the original behavior, so
+// existing `mcprobe` MCP-client configs keep working unchanged.
+const firstArg = process.argv[2];
+const runAsCli = Boolean(firstArg) && firstArg !== "serve";
+
+if (runAsCli) {
+  import("./cli.js")
+    .then(({ runCli }) => runCli(process.argv.slice(2)))
+    .then((code) => process.exit(code))
+    .catch((err) => {
+      console.error("[mcprobe] fatal:", err);
+      process.exit(1);
+    });
+} else {
+  main().catch((err) => {
+    console.error("[mcprobe] fatal:", err);
+    process.exit(1);
+  });
+}

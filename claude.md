@@ -27,11 +27,14 @@ the demo target is rebuilt and re-emitted before every test run, so
 `tests/demo-target.test.ts` always spawns a fresh binary. If you want
 to skip the rebuild, run `npx vitest run` directly.
 
-The probe is **stdio-only**. Anything written to stdout in `src/` is a
-bug — it would interleave the JSON-RPC stream. Use `console.error` (or
-a tiny stderr wrapper) for operator-visible logs. The target's own
-stderr is inherited by default so the operator sees target log output
-intermixed with the probe's.
+The probe (MCP **server** mode) is **stdio-only**. Anything written to stdout
+in `src/` from server mode is a bug — it would interleave the JSON-RPC stream.
+Use `console.error` for operator-visible logs. The target's own stderr is
+inherited by default. **Exception:** the CLI (`src/cli.ts`, run via
+`mcprobe audit`/`push`) is *not* the JSON-RPC server — it owns stdout for
+human-readable output (the Markdown report / score). `src/index.ts` dispatches
+on the first argv: a recognized command runs `cli.ts`; no args (or `serve`)
+boots the MCP server (the original behavior, so existing configs keep working).
 
 ## File layout
 
@@ -50,8 +53,9 @@ mcprobe/
 │   ├── fuzz.ts           # JSON-Schema -> valid + malformed cases
 │   ├── conformance.ts    # orchestrator + 4-dimension scoring
 │   ├── report.ts         # pure Markdown renderer
-│   ├── index.ts          # McpServer, registers probe_* tools
-│   └── audit.ts          # library entry: auditUrl() + softenReport() (embed in another app)
+│   ├── index.ts          # entry: dispatches CLI vs MCP server; registers probe_* tools
+│   ├── cli.ts            # `mcprobe audit`/`push` command-line interface (owns stdout)
+│   └── audit.ts          # library entry: auditUrl() + auditStdio() + softenReport()
 ├── examples/
 │   ├── demo-target/      # sibling package, four flawed tools
 │   │   ├── package.json
@@ -89,8 +93,9 @@ touch the world):
 | `src/conformance.ts` | yes | none |
 | `src/report.ts` | yes | none |
 | `src/target-client.ts` | no | spawns / dials MCP transports |
-| `src/index.ts` | no | owns the stdio transport, registers tools |
-| `src/audit.ts` | no | `auditUrl()` dials an http target; `softenReport()` is pure. Library entry for embedding (exported as `mcprobe/audit`). |
+| `src/index.ts` | no | dispatches CLI vs server; owns the stdio transport, registers tools |
+| `src/cli.ts` | no | `mcprobe audit`/`push`; prints to stdout, `push` POSTs the report to an ingest endpoint |
+| `src/audit.ts` | no | `auditUrl()` dials an http target, `auditStdio()` spawns a stdio target; `softenReport()` is pure. Library entry (exported as `mcprobe/audit`). |
 
 ## Naming rules
 
