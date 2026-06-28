@@ -47,6 +47,25 @@ MCProbe does both, on a single connection:
    0–100 score on four dimensions, mapped to an A–F grade, and
    rendered as a Markdown report the host (or a human) can read.
 
+## Hosted version — mcprobe.org
+
+Don't want to install anything? **[mcprobe.org](https://mcprobe.org)** is the
+hosted version of this engine — paste an MCP server's URL in your browser and get
+the same graded report, no Node or setup required.
+
+- **Free** — 2 audits/day with a soft report (score, grade, dimension scores,
+  finding counts).
+- **Pro** ($9.90 once, lifetime) — the full report (per-dimension reasons, every
+  finding, the fuzz table, recommended fixes), 30 audits/day, saved history, the
+  public gallery, Markdown export, and shareable links.
+- **Local (stdio) servers** — a Pro feature: run `mcprobe push --stdio "…"
+  --token <key>` to audit a server on your machine and send the report to your
+  account (see [the CLI](#option-2--the-mcprobe-cli-no-host)).
+
+This engine stays **MIT-licensed and free** — the hosted app only adds accounts,
+persistence, the gallery, and those conveniences. Run it yourself for nothing, or
+pay once for the hosted experience.
+
 ## Install
 
 ```bash
@@ -363,6 +382,9 @@ for a hosted backend; `auditStdio` launches a local subprocess, so use it only
 for servers you trust (CLIs, your own machine). `softenReport` is handy for a
 free/preview tier — it keeps the scores and counts but withholds the reasons,
 full findings, fuzz table, and recommended fixes.
+
+This is exactly how the hosted app at [mcprobe.org](https://mcprobe.org) is built
+on top of the engine.
 
 ## Architecture
 

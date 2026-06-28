@@ -6,6 +6,21 @@ naming rules, runtime dependencies, the project terminology, and the
 procedure for adding a new lint rule, fuzz case, or `probe_*` tool.
 Update this file when conventions change; do not silently drift.
 
+## Open-core: this repo vs the hosted app
+
+This repository is the **open-source engine** (MIT). A separate, **private** repo
+(`mcprobe-app` — the hosted product at mcprobe.org) builds on it two ways:
+
+- **As a library:** `import { auditUrl, auditStdio, softenReport, renderReport }
+  from "mcprobe/audit"`.
+- **Via the CLI:** `mcprobe push` POSTs a report to the app's ingest endpoint.
+
+Keep this repo generic and product-agnostic: **no paywall, pricing, accounts,
+gallery, or other business logic here.** The app gates its Pro features (full
+reports, the gallery, 30 audits/day, local/stdio uploads) on its own side. The
+`push` command stays generic — it uploads a report to a configurable endpoint
+with a bearer token, and the endpoint decides entitlements.
+
 ## Build, test, run
 
 | Action | Command |
