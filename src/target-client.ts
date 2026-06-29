@@ -13,7 +13,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
-import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
+import type { Transport, FetchLike } from "@modelcontextprotocol/sdk/shared/transport.js";
 import type { ToolSummary } from "./types.js";
 
 // ---------------------------------------------------------------------------
@@ -32,6 +32,10 @@ export interface ConnectHttpOptions {
   /** Force a particular transport when both are available. Defaults to
    *  "streamable" — the modern replacement — and falls back to SSE. */
   prefer?: "streamable" | "sse";
+  /** Custom fetch used for every network request the HTTP transport makes.
+   *  Lets an embedder wrap requests with their own policy (e.g. an SSRF guard
+   *  that re-checks the host and refuses redirects). Defaults to global fetch. */
+  fetch?: FetchLike;
 }
 
 export interface CallToolResult {
@@ -347,11 +351,13 @@ export async function connectHttp(opts: ConnectHttpOptions): Promise<Connection>
 }
 
 function createHttpTransport(opts: ConnectHttpOptions): Transport {
+  // Pass the embedder's custom fetch through to the transport when supplied.
+  const transportOpts = opts.fetch ? { fetch: opts.fetch } : undefined;
   // Prefer the modern streamable HTTP transport. The spec tells us to
   // fall back to SSE if the resolved SDK version doesn't expose it.
   if (opts.prefer !== "sse") {
     try {
-      return new StreamableHTTPClientTransport(new URL(opts.url));
+      return new StreamableHTTPClientTransport(new URL(opts.url), transportOpts);
     } catch (err) {
       console.error(
         `[mcprobe] streamable-http transport failed to construct for ${opts.url}, falling back to SSE:`,
@@ -359,7 +365,7 @@ function createHttpTransport(opts: ConnectHttpOptions): Transport {
       );
     }
   }
-  return new SSEClientTransport(new URL(opts.url));
+  return new SSEClientTransport(new URL(opts.url), transportOpts);
 }
 
 // ---------------------------------------------------------------------------

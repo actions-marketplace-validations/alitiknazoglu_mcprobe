@@ -7,6 +7,7 @@
 // import (no server boot) so it's safe to import from any backend.
 
 import { connectHttp, connectStdio, type Connection } from "./target-client.js";
+import type { FetchLike } from "@modelcontextprotocol/sdk/shared/transport.js";
 import { lintTools } from "./schema-lint.js";
 import { runFuzz } from "./fuzz.js";
 import { buildReport } from "./conformance.js";
@@ -29,6 +30,10 @@ export interface AuditUrlOptions {
   fuzzDestructive?: boolean;
   /** Cap on tools fuzzed. Default 10. */
   maxTools?: number;
+  /** Custom fetch for the HTTP transport (ignored by auditStdio). An embedder
+   *  can pass a wrapper that enforces its own network policy — e.g. an SSRF
+   *  guard that re-resolves the host and refuses redirects. */
+  fetch?: FetchLike;
 }
 
 /** Options for auditing a local stdio MCP server (a subprocess). */
@@ -93,7 +98,7 @@ export async function auditUrl(
   url: string,
   opts: AuditUrlOptions = {}
 ): Promise<ConformanceReport> {
-  const conn = await connectHttp({ url });
+  const conn = await connectHttp({ url, fetch: opts.fetch });
   return auditConnection(conn, opts);
 }
 
