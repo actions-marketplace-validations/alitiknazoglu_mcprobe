@@ -167,7 +167,7 @@ jobs:
   audit:
     runs-on: ubuntu-latest
     steps:
-      - uses: alitiknazoglu/mcprobe@main
+      - uses: alitiknazoglu/mcprobe@v1
         with:
           url: https://your-server.example.com/mcp
           fuzz: true          # behavioral testing (call tools with bad input)
@@ -183,7 +183,7 @@ mcprobe.org Pro key, stored as a GitHub secret). The audit stays the same; the
 run is *also* uploaded to your history/dashboard on mcprobe.org.
 
 ```yaml
-      - uses: alitiknazoglu/mcprobe@main
+      - uses: alitiknazoglu/mcprobe@v1
         with:
           url: https://your-server.example.com/mcp
           min-score: "75"
