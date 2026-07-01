@@ -136,7 +136,9 @@ node dist/index.js audit --stdio "npx @acme/my-mcp-server" --fuzz
 
 (After `npm install -g .` or `npm link`, the command is just `mcprobe audit …`.)
 
-It prints the full Markdown report to stdout. `--fuzz` also **calls each tool
+It prints the full Markdown report to stdout — add `--json` for a
+machine-readable report (what the [GitHub Action](#audit-in-ci-github-action)
+and other tooling consume). `--fuzz` also **calls each tool
 with malformed input** to score Error Handling & Liveness; tools the target
 marks `destructiveHint: true` are skipped unless you add `--fuzz-destructive`,
 so a default run is safe even against servers you don't control. Omit `--fuzz`
