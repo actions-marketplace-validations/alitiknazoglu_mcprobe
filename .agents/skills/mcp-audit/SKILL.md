@@ -58,12 +58,30 @@ allowed to test.**
   ones with the exact tool/parameter and the recommended fix.
 
 ## Optional: save the run to a dashboard (needs an mcprobe.org Pro key)
+
+`push` runs the same audit and **uploads** it to the user's mcprobe.org history
+and public gallery. The audit itself is always free and local; only the hosted
+upload is the Pro tier.
+
+**How the user gets a key (one-time):**
+1. Go to **https://www.mcprobe.org** and **sign up** (email + password, then
+   confirm via the email link).
+2. **Go Pro** — $9.90 once, lifetime. Click "Go Pro" / "Unlock" and pay by
+   **crypto** (card checkout is coming soon).
+3. Open **My Profile** → https://www.mcprobe.org/app/profile.
+4. In the **"Audit a local (stdio) server"** card, click **Generate key**. A
+   token like `mcp_…` appears — it's shown **only once**, so copy it right away.
+5. Store it as an environment variable (keeps it out of shell history / code):
+   ```bash
+   export MCPROBE_TOKEN="mcp_your_key_here"
+   ```
+
+Then upload any audit:
 ```bash
 npx mcprobe push https://example.com/mcp --fuzz --token "$MCPROBE_TOKEN"
 ```
-`push` runs the same audit and uploads it to the user's mcprobe.org history and
-public gallery. The audit itself is always free and local; only the hosted
-upload is the Pro tier.
+The CLI also reads `MCPROBE_TOKEN` from the environment, so `--token` can be
+omitted once it's set.
 
 More detail (scoring model, the 12 lint rules, the fuzz categories):
 https://github.com/alitiknazoglu/mcprobe
