@@ -195,6 +195,24 @@ run is *also* uploaded to your history/dashboard on mcprobe.org.
 The audit itself is always free and local; the hosted tracking (history, gallery,
 badge) is the Pro tier — see [Hosted version](#hosted-version--mcprobeorg).
 
+## Agent skill
+
+This repo ships an [**agent skill**](.claude/skills/mcp-audit/SKILL.md) so your
+coding agent knows how to drive MCProbe on its own — just say _"audit this MCP
+server"_ and it runs the right `probe_*` tools or `mcprobe` CLI command and
+explains the score. To install it, copy the folder into your agent's skills
+directory:
+
+```bash
+# Claude Code (project- or user-level)
+cp -r .claude/skills/mcp-audit /path/to/your/project/.claude/skills/
+
+# Other agents that use the open skills format (Codex, Opencode, Cursor, …)
+cp -r .claude/skills/mcp-audit /path/to/your/project/.agents/skills/
+```
+
+It's a single `SKILL.md` — the same file works in either location.
+
 ## The six `probe_*` tools
 
 MCProbe registers four core tools and two optional helpers. The core
