@@ -35,7 +35,12 @@ describe("softenReport", () => {
   it("reports finding and critical counts, not the lists", () => {
     const soft = softenReport(report);
     expect(soft.findings).toEqual({ total: 2, error: 1, warning: 1, info: 0 });
-    expect(soft.critical).toEqual({ measured: true, silentTools: 1, crashes: 0 });
+    expect(soft.critical).toEqual({
+      measured: true,
+      silentTools: 1,
+      emptySuccessTools: 0,
+      crashes: 0,
+    });
   });
 
   it("withholds the paid detail (no reasons, locked sections listed)", () => {

@@ -53,6 +53,10 @@ export interface FuzzResult {
   case: string;
   outcome: FuzzOutcome;
   silentlyAccepted: boolean;
+  /** A valid call that returned success (isError:false) but with no usable
+   *  content — empty result or only empty/whitespace text. The "hallucinated
+   *  success" case: the agent reads "done" but got nothing back. */
+  emptySuccess?: boolean;
   latencyMs: number;
   errorMessage?: string;
 }

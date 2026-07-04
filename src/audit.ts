@@ -143,7 +143,13 @@ export interface SoftReport {
   /** Finding counts by severity — not the list. */
   findings: { total: number; error: number; warning: number; info: number };
   /** Critical-issue summary — counts only, mirrors the report callout. */
-  critical: { measured: boolean; silentTools: number; crashes: number };
+  critical: {
+    measured: boolean;
+    silentTools: number;
+    /** Tools that return an empty success on a valid call (hallucinated success). */
+    emptySuccessTools: number;
+    crashes: number;
+  };
   /** Sections withheld until the user unlocks the full report. */
   locked: Array<
     "dimensionReasons" | "findingsList" | "fuzzTable" | "recommendedFixes"
@@ -162,6 +168,9 @@ export function softenReport(report: ConformanceReport): SoftReport {
   const silentTools = new Set(
     report.fuzz.filter((r) => r.silentlyAccepted).map((r) => r.name)
   );
+  const emptySuccessTools = new Set(
+    report.fuzz.filter((r) => r.emptySuccess).map((r) => r.name)
+  );
   const crashes = report.fuzz.filter((r) => r.outcome === "protocolCrash").length;
 
   return {
@@ -179,6 +188,7 @@ export function softenReport(report: ConformanceReport): SoftReport {
     critical: {
       measured: report.fuzz.length > 0,
       silentTools: silentTools.size,
+      emptySuccessTools: emptySuccessTools.size,
       crashes,
     },
     locked: ["dimensionReasons", "findingsList", "fuzzTable", "recommendedFixes"],

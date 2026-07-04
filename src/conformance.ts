@@ -178,9 +178,14 @@ export function scoreLiveness(fuzzResults: FuzzResult[]): DimensionScore {
   const valid = fuzzResults.filter((r) => r.case === "valid");
   let ok = 0;
   let failures = 0;
+  let emptyOk = 0;
   const okLatencies: number[] = [];
   for (const r of valid) {
-    if (r.outcome === "ok") {
+    if (r.outcome === "ok" && r.emptySuccess) {
+      // Returned success but with no usable content — a "hallucinated success".
+      // Not credited: the caller can't tell it from a real result.
+      emptyOk += 1;
+    } else if (r.outcome === "ok") {
       ok += 1;
       okLatencies.push(r.latencyMs);
     } else {
@@ -196,8 +201,13 @@ export function scoreLiveness(fuzzResults: FuzzResult[]): DimensionScore {
     const rate = ok / valid.length;
     score = 10 * rate;
     reasons.push(
-      `${ok}/${valid.length} valid call(s) succeeded (${(rate * 100).toFixed(0)}%)`
+      `${ok}/${valid.length} valid call(s) returned a real result (${(rate * 100).toFixed(0)}%)`
     );
+    if (emptyOk > 0) {
+      reasons.push(
+        `${emptyOk} valid call(s) returned success but an empty/contentless response — possible hallucinated success (an agent can't tell it from a real result)`
+      );
+    }
     if (failures > 0) {
       reasons.push(
         `${failures} valid call(s) failed on good input (tool error or protocol crash)`

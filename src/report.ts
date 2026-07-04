@@ -83,9 +83,17 @@ function renderRecommendedFixes(report: ConformanceReport): string {
         report.fuzz.filter((r) => r.outcome === "protocolCrash").map((r) => r.name)
       ),
     ];
+    const emptyTools = [
+      ...new Set(report.fuzz.filter((r) => r.emptySuccess).map((r) => r.name)),
+    ];
     if (silentTools.length > 0) {
       items.push(
         `- **behavioral** Validate inputs and reject unknown keys (e.g. a strict schema) so malformed arguments return a clear error instead of being silently accepted _(${affected(silentTools)})_`
+      );
+    }
+    if (emptyTools.length > 0) {
+      items.push(
+        `- **behavioral** Return a result payload that confirms what happened on success (e.g. the created id, a count, or a status message) so an agent can tell a real success from a silent no-op — an empty success reads as "done" when nothing happened _(${affected(emptyTools)})_`
       );
     }
     if (crashTools.length > 0) {
@@ -163,10 +171,13 @@ function renderCriticalLine(fuzz: FuzzResult[]): string {
   const silentTools = new Set(
     fuzz.filter((r) => r.silentlyAccepted).map((r) => r.name)
   );
+  const emptyTools = new Set(
+    fuzz.filter((r) => r.emptySuccess).map((r) => r.name)
+  );
   const crashes = fuzz.filter((r) => r.outcome === "protocolCrash").length;
 
-  if (silentTools.size === 0 && crashes === 0) {
-    return "**✓ No critical behavioral issues** — no silent accepts or protocol crashes";
+  if (silentTools.size === 0 && emptyTools.size === 0 && crashes === 0) {
+    return "**✓ No critical behavioral issues** — no silent accepts, hallucinated successes or protocol crashes";
   }
 
   const parts: string[] = [];
@@ -176,6 +187,12 @@ function renderCriticalLine(fuzz: FuzzResult[]): string {
       silentTools.size <= 4 ? ` (${[...silentTools].join(", ")})` : "";
     parts.push(
       `${silentTools.size} tool(s) silently accept malformed input${names}`
+    );
+  }
+  if (emptyTools.size > 0) {
+    const names = emptyTools.size <= 4 ? ` (${[...emptyTools].join(", ")})` : "";
+    parts.push(
+      `${emptyTools.size} tool(s) return an empty success on valid input — possible hallucinated success${names}`
     );
   }
   if (crashes > 0) {
@@ -316,6 +333,8 @@ function formatFuzzRow(r: ConformanceReport["fuzz"][number]): string {
     note = truncate(r.errorMessage, 60);
   } else if (r.outcome === "protocolCrash" && r.errorMessage) {
     note = `crash: ${truncate(r.errorMessage, 50)}`;
+  } else if (r.emptySuccess) {
+    note = "empty success — no content returned";
   }
 
   return `| \`${r.name}\` | \`${r.case}\` | ${r.outcome} | ${silent} | ${r.latencyMs.toFixed(0)} | ${escapePipes(note)} |`;

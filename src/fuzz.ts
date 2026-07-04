@@ -328,13 +328,33 @@ function classify(
       latencyMs: r.latencyMs,
     };
   }
+  // Valid case, ok, isError:false → the tool served the happy path. But if it
+  // came back with no usable content, that's a "hallucinated success" — the
+  // agent reads "done" while nothing actually happened.
   return {
     name: toolName,
     case: fuzzCase.label,
     outcome: "ok",
     silentlyAccepted: false,
+    emptySuccess: isEmptyResult(r.content),
     latencyMs: r.latencyMs,
   };
+}
+
+/** A successful call whose result carries no usable payload — an empty content
+ *  array, or only empty/whitespace text parts. A non-text part (image,
+ *  resource, audio) counts as a real payload. This is the "hallucinated
+ *  success" smell: ok came back, but the caller got nothing to act on. */
+export function isEmptyResult(content: unknown): boolean {
+  if (!Array.isArray(content) || content.length === 0) return true;
+  return content.every((part) => {
+    if (!part || typeof part !== "object") return true;
+    const p = part as { type?: unknown; text?: unknown };
+    if (p.type === "text") {
+      return typeof p.text !== "string" || p.text.trim().length === 0;
+    }
+    return false; // image / resource / audio / etc. → real payload
+  });
 }
 
 /** Pull a human-readable line out of a tool-error content array. */

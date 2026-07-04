@@ -249,6 +249,12 @@ lint, transport, stdio, capability, severity, finding.
   affected locations, worst severity first), plus behavioral fixes for
   silent accepts and crashes. When a lint rule's `hint` changes, the
   recommended-fixes output changes with it — no extra wiring needed.
+- **Hallucinated success (`emptySuccess`).** `classify` (src/fuzz.ts) flags a
+  *valid* case that returns `isError:false` with no usable content (empty array
+  or only empty/whitespace text — see `isEmptyResult`) as `emptySuccess`.
+  `scoreLiveness` does **not** credit those calls (they aren't a real success),
+  and the report hoists them onto the critical line + a "return a confirmation
+  payload" recommended fix. This is the "agent said done, nothing happened" case.
 - **Normalized, non-overlapping scoring** (src/conformance.ts). The two
   behavioral dimensions are rate-based so scores compare across server
   sizes, and they **partition the fuzz cases by kind** — malformed cases

@@ -41,6 +41,10 @@ const malformedSilent = (n = "t") => row("wrong_type:x", "ok", true, 1, n);
 const malformedCrash = (n = "t") => row("extra_garbage", "protocolCrash", false, 1, n);
 const validOk = (ms = 1, n = "t") => row("valid", "ok", false, ms, n);
 const validToolError = (n = "t") => row("valid", "toolError", false, 1, n);
+const validEmptyOk = (n = "t"): FuzzResult => ({
+  ...row("valid", "ok", false, 1, n),
+  emptySuccess: true,
+});
 
 // ---------------------------------------------------------------------------
 // scoreErrorHandling — graceful-rejection rate over malformed cases
@@ -88,6 +92,16 @@ describe("scoreLiveness", () => {
   it("scores by rate when some valid calls fail", () => {
     const d = scoreLiveness([validOk(), validToolError()]);
     expect(d.score).toBe(5); // 1 of 2 valid calls succeeded
+  });
+
+  it("does not credit a valid call that returned an empty success (hallucinated success)", () => {
+    const d = scoreLiveness([validOk(), validEmptyOk()]);
+    expect(d.score).toBe(5); // 1 of 2 valid calls returned a real result
+  });
+
+  it("scores 0 when the only valid call is an empty success", () => {
+    const d = scoreLiveness([validEmptyOk()]);
+    expect(d.score).toBe(0);
   });
 
   it("ignores malformed cases entirely (no overlap with Error Handling)", () => {

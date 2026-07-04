@@ -21,6 +21,7 @@ import {
   runOneCaseForTest,
   runFuzz,
   isDestructive,
+  isEmptyResult,
 } from "../src/fuzz.js";
 import type { FuzzCase, FuzzResult, ToolSummary } from "../src/types.js";
 import type { Connection } from "../src/target-client.js";
@@ -273,6 +274,22 @@ describe("fuzz — sampleValidValue", () => {
 // runOneCaseForTest — outcome classification
 // ---------------------------------------------------------------------------
 
+describe("isEmptyResult", () => {
+  it("treats an empty array or non-array as empty", () => {
+    expect(isEmptyResult([])).toBe(true);
+    expect(isEmptyResult(undefined)).toBe(true);
+    expect(isEmptyResult(null)).toBe(true);
+  });
+  it("treats only empty/whitespace text parts as empty", () => {
+    expect(isEmptyResult([{ type: "text", text: "" }])).toBe(true);
+    expect(isEmptyResult([{ type: "text", text: "   " }])).toBe(true);
+  });
+  it("treats real text or non-text payload as NOT empty", () => {
+    expect(isEmptyResult([{ type: "text", text: "saved id=42" }])).toBe(false);
+    expect(isEmptyResult([{ type: "image", data: "…" }])).toBe(false);
+  });
+});
+
 describe("fuzz — runOneCaseForTest outcome classification", () => {
   const baseCall =
     (behavior: (
@@ -303,7 +320,25 @@ describe("fuzz — runOneCaseForTest outcome classification", () => {
     });
     expect(r.outcome).toBe("ok");
     expect(r.silentlyAccepted).toBe(false);
+    expect(r.emptySuccess).toBeFalsy(); // baseCall returns real text content
     expect(r.name).toBe("t");
+  });
+
+  it("flags a valid call that returns empty content as emptySuccess (hallucinated success)", async () => {
+    const emptyCall: CallFn = async () => ({
+      ok: true,
+      isError: false,
+      content: [], // 200 + empty body — nothing to act on
+      latencyMs: 1,
+    });
+    const r = await runOneCaseForTest(emptyCall, "t", {
+      label: "valid",
+      args: {},
+      malformed: false,
+    });
+    expect(r.outcome).toBe("ok");
+    expect(r.silentlyAccepted).toBe(false);
+    expect(r.emptySuccess).toBe(true);
   });
 
   it("classifies ok && !isError on a MALFORMED case as silentlyAccepted=true", async () => {

@@ -289,9 +289,16 @@ The classifier assigns one of three outcomes:
 
 | Outcome | Meaning |
 | --- | --- |
-| `ok` | The target returned a result with `isError: false`. For a malformed case this is `silentlyAccepted: true`. |
+| `ok` | The target returned a result with `isError: false`. For a malformed case this is `silentlyAccepted: true`; for a **valid** case with no usable content it is `emptySuccess: true`. |
 | `toolError` | The target returned a result with `isError: true` (graceful rejection). |
 | `protocolCrash` | The call rejected or the transport closed. |
+
+**Hallucinated success (`emptySuccess`).** A valid call that returns success but
+with an **empty / contentless** result — e.g. a write tool that answers `200`
+with an empty body and never persists anything. The agent reads "done" while
+nothing happened. MCProbe flags this on the critical line, drops **Liveness**
+credit for that call (it isn't a real success), and recommends returning a
+confirmation payload. This is the "the agent said done, nothing happened" bug.
 
 **Dry-run safety.** By default, tools annotated `destructiveHint: true`
 are **not** fuzzed — so pointing MCProbe at a server you don't control
