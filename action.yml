@@ -1,6 +1,6 @@
-name: "MCProbe — MCP conformance audit"
-description: "Audit an MCP server's conformance (schema lint + behavioral fuzzing), score it 0–100, and optionally fail the build below a threshold."
-author: "MCProbe"
+name: "MCProbe MCP Conformance Audit"
+description: "Audit an MCP server's conformance (schema lint + behavioral fuzzing), score it 0-100, and optionally fail the build below a threshold."
+author: "alitiknazoglu"
 branding:
   icon: "shield"
   color: "orange"
