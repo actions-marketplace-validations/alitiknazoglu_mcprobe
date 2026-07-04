@@ -51,8 +51,10 @@ allowed to test.**
 - **Overall 0–100 + grade A–F** (A ≥ 90, B ≥ 75, C ≥ 60, D ≥ 40, F < 40).
 - **Four dimensions**, each 0–10: schema quality, error handling, liveness, and
   metadata/annotations.
-- **Critical-issues callout:** tools that silently accept bad input, plus crash
-  count — these hurt agents and users the most, so surface them first.
+- **Critical-issues callout:** the behaviors that hurt agents and users most, so
+  surface them first — tools that **silently accept bad input**, tools that
+  return an **empty success on a valid call** (a *hallucinated success*: the tool
+  reports "done" but returns/persists nothing), and **protocol crashes**.
 - **Findings** carry stable dotted codes (`tool.missing_description`,
   `param.untyped`, `schema.invalid`, …) and fix hints. Report the worst-severity
   ones with the exact tool/parameter and the recommended fix.
